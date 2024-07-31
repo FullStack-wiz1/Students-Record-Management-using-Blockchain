@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Student Records Storing Using Blockchain</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #2E3192, #1BFFFF);
+      margin: 0;
+      padding: 0;
+    }
+     
+    .container {
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background-color: #fff;
+      border-radius: 10px;
+      box-shadow: 0 0 20px rgba(0, 0, 0, 0.1);
+    }
+    
+    h1, h2 {
+      text-align: center;
+      color: #333;
+    }
+    
+    button {
+      background-color: #4CAF50;
+      border: none;
+      color: white;
+      padding: 10px 20px;
+      text-align: center;
+      text-decoration: none;
+      display: inline-block;
+      font-size: 16px;
+      margin: 10px 0;
+      cursor: pointer;
+      border-radius: 5px;
+      transition-duration: 0.4s;
+    }
+
+    button:hover {
+      background-color: #45a049;
+    }
+
+    #studentDetails {
+      margin-top: 20px;
+    }
+
+    #studentDetails div {
+      border-bottom: 1px solid #ddd;
+      padding: 10px 0;
+    }
+  </style>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.5.2/web3.min.js"></script>
+  <script type="text/javascript">
+    async function initWeb3() {
+      
+      if (window.ethereum) {
+        window.web3 = new Web3(ethereum);
+        try {
+          await ethereum.enable();
+        } catch (error) {
+          console.error("User denied account access");
+          return;
+        }
+      } else if (window.web3) {
+        window.web3 = new Web3(web3.currentProvider);
+      } else {
+        console.log("Non-Ethereum browser detected. You should consider trying MetaMask!");
+        return;
+      }
+      
+      ethereum.on('accountsChanged', function (accounts) {
+        console.log("Accounts changed:", accounts);
+        window.web3.eth.defaultAccount = accounts[0];
+      });
+    }
+    initWeb3();
+    
+    var scoreCardABI =[
+	{
+		"inputs": [
+			{
+				"internalType": "string",
+				"name": "_studentFirstName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "_studentLastName",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_englishMarks",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_mathMarks",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_scienceMarks",
+				"type": "uint256"
+			}
+		],
+		"name": "addStudent",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "_studentId",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_englishMarks",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_mathMarks",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_scienceMarks",
+				"type": "uint256"
+			}
+		],
+		"name": "recordStudentScore",
+		"outputs": [],
+		"stateMutability": "nonpayable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"stateMutability": "nonpayable",
+		"type": "constructor"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "string",
+				"name": "_studentFirstName",
+				"type": "string"
+			},
+			{
+				"indexed": true,
+				"internalType": "string",
+				"name": "_studentLastName",
+				"type": "string"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_studentId",
+				"type": "uint256"
+			}
+		],
+		"name": "StudentAdded",
+		"type": "event"
+	},
+	{
+		"anonymous": false,
+		"inputs": [
+			{
+				"indexed": true,
+				"internalType": "uint256",
+				"name": "_studentId",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_englishMarks",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_mathMarks",
+				"type": "uint256"
+			},
+			{
+				"indexed": false,
+				"internalType": "uint256",
+				"name": "_scienceMarks",
+				"type": "uint256"
+			}
+		],
+		"name": "StudentScoreRecorded",
+		"type": "event"
+	},
+	{
+		"inputs": [],
+		"name": "classTeacher",
+		"outputs": [
+			{
+				"internalType": "address",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getAllStudents",
+		"outputs": [
+			{
+				"internalType": "string[]",
+				"name": "",
+				"type": "string[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			},
+			{
+				"internalType": "uint256[]",
+				"name": "",
+				"type": "uint256[]"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"name": "students",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "firstName",
+				"type": "string"
+			},
+			{
+				"internalType": "string",
+				"name": "lastName",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "englishMarks",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "mathMarks",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "scienceMarks",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	}
+];
+    
+    var scoreCardAddress = '0x91CC2F4Baa7B2f24Cf0911DC159C7a13bd6c43CC'; 
+    var scoreCardContract = new web3.eth.Contract(scoreCardABI, scoreCardAddress);
+    
+    function addStudent() {
+      var firstName = prompt("Enter First Name:");
+      var lastName = prompt("Enter Last Name:");
+      var englishMarks = parseInt(prompt("Enter English Marks (out of 20):"));
+      var mathMarks = parseInt(prompt("Enter Math Marks (out of 20):"));
+      var scienceMarks = parseInt(prompt("Enter Science Marks (out of 20):"));
+      
+      if (englishMarks > 20 || mathMarks > 20 || scienceMarks > 20) {
+        alert("Please enter marks out of 20");
+        return;
+      }
+      
+      web3.eth.getAccounts(function(error, accounts) {
+        if (error) {
+          console.error(error);
+          alert("Failed to get accounts!");
+          return;
+        }
+        
+        var from = accounts[0];
+        
+        scoreCardContract.methods.addStudent(firstName, lastName, englishMarks, mathMarks, scienceMarks)
+        .send({from: from})
+        .on('transactionHash', function(hash){
+          console.log(hash);
+        })
+        .on('receipt', function(receipt){
+          console.log(receipt);
+          alert("Student added successfully!");
+        })
+        .on('error', function(error) {
+          console.error(error);
+          alert("Failed to add student!");
+        });
+      });
+    }
+    
+    function getStudentDetails() {
+      scoreCardContract.methods.getAllStudents().call()
+      .then(function(result) {
+        displayStudentDetails(result);
+      })
+      .catch(function(error) {
+        console.error(error);
+        alert("Failed to get student details!");
+      });
+    }
+    function displayStudentDetails(details) {
+      var container = document.getElementById("studentDetails");
+      container.innerHTML = ""; 
+      
+      for (var i = 0; i < details[0].length; i++) {
+        var studentInfo = document.createElement("div");
+        studentInfo.innerHTML = "<strong>Name:</strong> " + details[0][i] + "<br>" +
+                                "<strong>English Marks:</strong> " + details[1][i] + "<br>" +
+                                "<strong>Math Marks:</strong> " + details[2][i] + "<br>" +
+                                "<strong>Science Marks:</strong> " + details[3][i] + "<br><br>";
+        container.appendChild(studentInfo);
+      }
+    }
+  </script>
+</head>
+<body>
+  <div class="container">
+    <h1>Students Records Storing Using Blockchain</h1>
+
+    <h2>Add Student</h2>
+    <button onclick="addStudent()">Add Student Name and Marks</button>
+  
+    <button onclick="getStudentDetails()">Get all Students details</button>
+  
+    <div id="studentDetails">
+    </div>
+  </div>
+</body>
+</html>
